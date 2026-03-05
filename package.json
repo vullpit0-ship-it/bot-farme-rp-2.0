@@ -1,0 +1,20 @@
+{
+  "name": "farme-rp-2",
+  "version": "1.0.0",
+  "description": "Bot de farme RP",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "luxon": "^3.7.2",
+    "node-cron": "^4.2.1"
+  }
+}

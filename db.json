@@ -1,0 +1,306 @@
+{
+  "requests": {
+    "1478999916679397451": {
+      "messageId": "1478999916679397451",
+      "channelId": "1478996755231281207",
+      "guildId": "1477774289414656213",
+      "userId": "760875137163067413",
+      "userTag": "rodrigo_sue",
+      "itemValue": "saco-ziplock",
+      "itemLabel": "Saco Ziplock",
+      "quantidade": 40,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1478999912107606147/2676230222222222222222222222_50.jpg?ex=69aa7181&is=69a92001&hm=c019c4c399ab8a6e525b76bb8fe7c625eebf7b585b23569e3b6b0e9f3e98cb01&",
+      "status": "approved",
+      "createdAt": 1772691456922,
+      "decidedAt": 1772691463952,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue"
+    },
+    "1479001148043169858": {
+      "messageId": "1479001148043169858",
+      "channelId": "1479000908674109440",
+      "guildId": "1477774289414656213",
+      "userId": "560109405618569216",
+      "userTag": "rodrigoiichandler3511",
+      "itemValue": "folha-bruta",
+      "itemLabel": "Folha Bruta",
+      "quantidade": 30,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1479001143240818830/Screenshot_2026-03-03_233600.png?ex=69aa72a7&is=69a92127&hm=734f5ca22985d0989b5fbdb5e641a7d206cbc3aa992d49bf79077a35f68712ef&",
+      "status": "approved",
+      "createdAt": 1772691751145,
+      "decidedAt": 1772691839258,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue"
+    },
+    "1479009507282522335": {
+      "requestId": "1479009507282522335",
+      "messageId": "1479009507282522335",
+      "channelId": "1479009444200452119",
+      "guildId": "1477774289414656213",
+      "userId": "560109405618569216",
+      "userTag": "rodrigoiichandler3511",
+      "itemValue": "estabilizador",
+      "itemLabel": "Estabilizador",
+      "quantidade": 20,
+      "originalQuantidade": 20,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1479009502228516925/Screenshot_2026-03-03_233600.png?ex=69aa7a6f&is=69a928ef&hm=ae50fbb43ba5d8fc92366eb9c393de0222cb926337013d2b8b789f75750070b2&",
+      "status": "approved",
+      "createdAt": 1772693743235,
+      "decidedAt": 1772693790003,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue",
+      "denyReason": null,
+      "adjustedAt": null,
+      "adjustedById": null,
+      "adjustedByTag": null,
+      "adjustedDelta": 0,
+      "adjustedNote": null,
+      "closedAt": null,
+      "closedById": null,
+      "closedByTag": null
+    },
+    "1479179283862655261": {
+      "requestId": "1479179283862655261",
+      "messageId": "1479179283862655261",
+      "channelId": "1479179225301909605",
+      "guildId": "1477774289414656213",
+      "userId": "560109405618569216",
+      "userTag": "rodrigoiichandler3511",
+      "itemValue": "pasta-base",
+      "itemLabel": "Pasta Base",
+      "quantidade": 2,
+      "originalQuantidade": 2,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1479179280062746716/Screenshot_2026-03-03_233600.png?ex=69ab188e&is=69a9c70e&hm=4681eb521e68176dffd145f391f4013a7f3cbb0a8063c15eb063bc3294c66e29&",
+      "status": "approved",
+      "createdAt": 1772734221745,
+      "decidedAt": 1772734242482,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue",
+      "denyReason": null,
+      "adjustedAt": null,
+      "adjustedById": null,
+      "adjustedByTag": null,
+      "adjustedDelta": 0,
+      "adjustedNote": null,
+      "closedAt": null,
+      "closedById": null,
+      "closedByTag": null
+    },
+    "1479179722012233874": {
+      "requestId": "1479179722012233874",
+      "messageId": "1479179722012233874",
+      "channelId": "1479179652009427174",
+      "guildId": "1477774289414656213",
+      "userId": "560109405618569216",
+      "userTag": "rodrigoiichandler3511",
+      "itemValue": "pasta-base",
+      "itemLabel": "Pasta Base",
+      "quantidade": 2,
+      "originalQuantidade": 2,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1479179715041300521/Screenshot_2026-03-03_233600.png?ex=69ab18f5&is=69a9c775&hm=24cad220784e89a58034994fe06e2808631d55c7b6c6373a57c8cea40c97187f&",
+      "status": "approved",
+      "createdAt": 1772734326935,
+      "decidedAt": 1772734330037,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue",
+      "denyReason": null,
+      "adjustedAt": null,
+      "adjustedById": null,
+      "adjustedByTag": null,
+      "adjustedDelta": 0,
+      "adjustedNote": null,
+      "closedAt": null,
+      "closedById": null,
+      "closedByTag": null
+    },
+    "1479179989181272136": {
+      "requestId": "1479179989181272136",
+      "messageId": "1479179989181272136",
+      "channelId": "1479179937285013606",
+      "guildId": "1477774289414656213",
+      "userId": "560109405618569216",
+      "userTag": "rodrigoiichandler3511",
+      "itemValue": "pasta-base",
+      "itemLabel": "Pasta Base",
+      "quantidade": 2,
+      "originalQuantidade": 2,
+      "printUrl": "https://cdn.discordapp.com/ephemeral-attachments/1478993035936399452/1479179985636818974/Screenshot_2026-03-03_233600.png?ex=69ab1936&is=69a9c7b6&hm=96d5158cdf152a516088ff47abf38eec9df6548d644346deb504fe0c04001c28&",
+      "status": "denied",
+      "createdAt": 1772734389876,
+      "decidedAt": 1772734398386,
+      "decidedById": "760875137163067413",
+      "decidedByTag": "rodrigo_sue",
+      "denyReason": "asasa",
+      "adjustedAt": null,
+      "adjustedById": null,
+      "adjustedByTag": null,
+      "adjustedDelta": 0,
+      "adjustedNote": null,
+      "closedAt": null,
+      "closedById": null,
+      "closedByTag": null
+    }
+  },
+  "totals": {
+    "760875137163067413": {
+      "total": 100,
+      "items": {
+        "saco-ziplock": 40,
+        "folha-bruta": 21,
+        "pasta-base": 39
+      }
+    },
+    "560109405618569216": {
+      "total": 245,
+      "items": {
+        "folha-bruta": 65,
+        "pasta-base": 70,
+        "estabilizador": 70,
+        "saco-ziplock": 40
+      }
+    },
+    "1293968433544953899": {
+      "total": 20,
+      "items": {
+        "folha-bruta": 20
+      }
+    }
+  },
+  "channels": {
+    "760875137163067413": {
+      "saco-ziplock": "1479000484441489479",
+      "folha-bruta": "1479170844621275156",
+      "pasta-base": "1479169927855341769"
+    },
+    "560109405618569216": {
+      "folha-bruta": "1479174628692725851",
+      "pasta-base": "1479189185238667406",
+      "saco-ziplock": "1479013003927224363",
+      "estabilizador": "1479019260100612178"
+    },
+    "1293968433544953899": {
+      "folha-bruta": "1479031463948320839"
+    }
+  },
+  "cooldowns": {
+    "760875137163067413": 1772732222456,
+    "560109405618569216": 1772736594171,
+    "1293968433544953899": 1772699021130
+  },
+  "daily": {
+    "2026-03-05": {
+      "560109405618569216": {
+        "pasta-base": 7,
+        "folha-bruta": 2
+      },
+      "1293968433544953899": {
+        "folha-bruta": 1
+      },
+      "760875137163067413": {
+        "pasta-base": 2,
+        "folha-bruta": 1
+      }
+    }
+  },
+  "debt": {},
+  "decisions": [
+    {
+      "decidedAt": 1772698027867,
+      "status": "approved",
+      "userId": "560109405618569216",
+      "itemLabel": "Pasta Base",
+      "itemValue": "pasta-base",
+      "quantidade": 1,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772698833649,
+      "status": "approved",
+      "userId": "560109405618569216",
+      "itemLabel": "Pasta Base",
+      "itemValue": "pasta-base",
+      "quantidade": 20,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772699026469,
+      "status": "approved",
+      "userId": "1293968433544953899",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 20,
+      "decidedByTag": "rodrigotcheco"
+    },
+    {
+      "decidedAt": 1772730275435,
+      "status": "approved",
+      "userId": "560109405618569216",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 10,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772730759410,
+      "status": "approved",
+      "userId": "760875137163067413",
+      "itemLabel": "Pasta Base",
+      "itemValue": "pasta-base",
+      "quantidade": 9,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772732011423,
+      "status": "approved",
+      "userId": "760875137163067413",
+      "itemLabel": "Pasta Base",
+      "itemValue": "pasta-base",
+      "quantidade": 20,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772732225652,
+      "status": "approved",
+      "userId": "760875137163067413",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 1,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772732549913,
+      "status": "denied",
+      "userId": "560109405618569216",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 2,
+      "decidedByTag": "rodrigo_sue",
+      "reason": "farme mais"
+    },
+    {
+      "decidedAt": 1772733054176,
+      "status": "approved",
+      "userId": "560109405618569216",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 5,
+      "decidedByTag": "rodrigo_sue"
+    },
+    {
+      "decidedAt": 1772733134446,
+      "status": "denied",
+      "userId": "560109405618569216",
+      "itemLabel": "Folha Bruta",
+      "itemValue": "folha-bruta",
+      "quantidade": 5,
+      "decidedByTag": "rodrigo_sue",
+      "reason": "negado"
+    }
+  ],
+  "fixed": {
+    "productivityMessageByUser": {
+      "560109405618569216": "1479188992976224377"
+    },
+    "leaderboardMessageId": "1479188599835459770"
+  }
+}
