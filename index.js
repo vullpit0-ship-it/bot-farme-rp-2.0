@@ -3,16 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const cron = require("node-cron");
 const { DateTime } = require("luxon");
-
 const http = require("http");
-
-const PORT = process.env.PORT || 3000;
-http
-  .createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("OK");
-  })
-  .listen(PORT, () => console.log(`🌐 WebService OK na porta ${PORT}`));
 
 const {
   Client,
@@ -32,7 +23,28 @@ const {
   TextInputStyle,
 } = require("discord.js");
 
+// =========================
+// ✅ WEB SERVER (Render exige porta aberta)
+// =========================
+const PORT = process.env.PORT || 3000;
+http
+  .createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("OK");
+  })
+  .listen(PORT, () => console.log(`🌐 WebService OK na porta ${PORT}`));
+
+// ✅ Log pra você confirmar se o Render está lendo as ENV
+console.log("ENV CHECK:", {
+  hasToken: !!process.env.DISCORD_TOKEN,
+  hasClientId: !!process.env.CLIENT_ID,
+  hasGuildId: !!process.env.GUILD_ID,
+  port: PORT,
+});
+
+// =========================
 // ✅ intents necessários
+// =========================
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
@@ -51,7 +63,7 @@ const REPORT_CHANNEL_ID = "1479024598166012007";
 // ✅ canal staff da tabela do /testardiario
 const STAFF_TABLE_CHANNEL_ID = "1479158423684649167";
 
-// ✅ NOVO: canais fixos
+// ✅ canais fixos
 const LEADERBOARD_CHANNEL_ID = "1479185447367479389";
 const PRODUCTIVITY_CHANNEL_ID = "1479185862196461638";
 
@@ -70,7 +82,7 @@ const DELETE_PENDING_OLDER_THAN_DAYS = 7;
 const TZ = "America/Cuiaba";
 
 // =========================
-// ✅ DM DIÁRIO SOMENTE PARA ESTES USER IDs (somente pro lembrete diário)
+// ✅ DM DIÁRIO SOMENTE PARA ESTES USER IDs
 // =========================
 const USER_ID_MEMBRO = "1477868954658541620";
 const USER_ID_GERENTE = "";
@@ -86,9 +98,10 @@ function dmWhitelist() {
 function canSendDailyDMTo(userId) {
   return dmWhitelist().includes(userId);
 }
-// =========================
 
+// =========================
 // opções do /farme
+// =========================
 const FARME_OPTIONS = [
   { label: "Pasta Base", value: "pasta-base", description: "Canal privado: Pasta Base" },
   { label: "Estabilizador", value: "estabilizador", description: "Canal privado: Estabilizador" },
@@ -109,13 +122,11 @@ function loadDB() {
         totals: {},
         channels: {},
         cooldowns: {},
-        daily: {},     // dateKey -> userId -> itemValue -> approvedCount
+        daily: {},
         decisions: [],
-
-        // ✅ NOVO: mensagens fixas
         fixed: {
-          leaderboardMessageId: null,           // 1 msg fixa
-          productivityMessageByUser: {},        // userId -> msgId
+          leaderboardMessageId: null,
+          productivityMessageByUser: {},
         },
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(init, null, 2), "utf8");
@@ -131,8 +142,13 @@ function loadDB() {
   } catch (e) {
     console.error("❌ Falha ao carregar db.json:", e);
     return {
-      requests: {}, totals: {}, channels: {}, cooldowns: {}, daily: {}, decisions: [],
-      fixed: { leaderboardMessageId: null, productivityMessageByUser: {} }
+      requests: {},
+      totals: {},
+      channels: {},
+      cooldowns: {},
+      daily: {},
+      decisions: [],
+      fixed: { leaderboardMessageId: null, productivityMessageByUser: {} },
     };
   }
 }
@@ -159,17 +175,13 @@ const commands = [
     .addIntegerOption((opt) =>
       opt.setName("quantidade").setDescription("Quantidade farmada (ex: 60)").setRequired(true).setMinValue(1)
     )
-    .addAttachmentOption((opt) =>
-      opt.setName("print").setDescription("Envie o print/anexo como prova").setRequired(true)
-    ),
+    .addAttachmentOption((opt) => opt.setName("print").setDescription("Envie o print/anexo como prova").setRequired(true)),
 
   new SlashCommandBuilder().setName("meusfarmes").setDescription("Mostra sua tabela de farmes (por item e total)."),
 
   new SlashCommandBuilder().setName("ranking").setDescription("Mostra o ranking geral de farmes (top 10)."),
 
-  new SlashCommandBuilder()
-    .setName("gerenciarcanal")
-    .setDescription("(Staff) Abre painel para Fechar/Encerrar/Ajustar o canal atual."),
+  new SlashCommandBuilder().setName("gerenciarcanal").setDescription("(Staff) Abre painel para Fechar/Encerrar/Ajustar o canal atual."),
 
   new SlashCommandBuilder()
     .setName("testardiario")
@@ -185,53 +197,20 @@ const commands = [
           { name: "data (YYYY-MM-DD)", value: "data" }
         )
     )
-    .addStringOption((opt) =>
-      opt.setName("data").setDescription('Se "dia" = data, coloque aqui: YYYY-MM-DD').setRequired(false)
-    ),
+    .addStringOption((opt) => opt.setName("data").setDescription('Se "dia" = data, coloque aqui: YYYY-MM-DD').setRequired(false)),
 
   new SlashCommandBuilder().setName("ajuda").setDescription("Mostra os comandos disponíveis para o seu cargo."),
 ].map((c) => c.toJSON());
 
 async function registerCommands() {
+  if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
+    console.log("⚠️ ENV faltando! Configure no Render: DISCORD_TOKEN, CLIENT_ID, GUILD_ID");
+    return;
+  }
   const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
   await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
   console.log("✅ Slash commands registrados no servidor!");
 }
-
-// ✅ evento certo no v14
-client.once("ready", async () => {
-  console.log(`🤖 Online como ${client.user.tag}`);
-
-  cleanupDB();
-  setInterval(cleanupDB, CLEANUP_EVERY_MS);
-
-  // ✅ job diário 03:05
-  cron.schedule(
-    "5 3 * * *",
-    async () => {
-      await runDailyAuditAndReport().catch((e) => console.error("Daily job error:", e));
-    },
-    { timezone: TZ }
-  );
-
-  // ✅ opcional: mantém leaderboard/painel atualizados a cada 5 min (mesmo sem aprovar)
-  cron.schedule(
-    "*/5 * * * *",
-    async () => {
-      for (const guild of client.guilds.cache.values()) {
-        await updateLeaderboardFixed(guild).catch(() => {});
-      }
-    },
-    { timezone: TZ }
-  );
-
-  // ✅ cria/atualiza a leaderboard ao ligar
-  for (const guild of client.guilds.cache.values()) {
-    await updateLeaderboardFixed(guild).catch(() => {});
-  }
-
-  console.log(`⏰ Daily job: 03:05 (${TZ}) | Auto refresh leaderboard: 5 em 5 min`);
-});
 
 // =========================
 // Helpers
@@ -315,7 +294,6 @@ function makeRequestEmbed({ userTag, userId, itemLabel, quantidade, status, appr
   return embed;
 }
 
-// Botões visíveis no post (membro também vê): só aprovar/negar
 function publicButtons({ disabled = false } = {}) {
   const approve = new ButtonBuilder()
     .setCustomId("farme_public_aprovar")
@@ -332,7 +310,6 @@ function publicButtons({ disabled = false } = {}) {
   return new ActionRowBuilder().addComponents(approve, deny);
 }
 
-// Painel staff (ephemeral): Fechar / Encerrar / Ajustar
 function staffPanelButtons(requestId, canAdjust) {
   const close = new ButtonBuilder()
     .setCustomId(`farme_staff_fechar:${requestId}`)
@@ -376,7 +353,6 @@ async function sendStaffTable(guild, content, embeds = []) {
   return false;
 }
 
-// ✅ DM diário (whitelist)
 async function safeDailyDM(userId, text) {
   if (!canSendDailyDMTo(userId)) return;
   const user = await client.users.fetch(userId).catch(() => null);
@@ -384,7 +360,6 @@ async function safeDailyDM(userId, text) {
   await user.send(text).catch(() => {});
 }
 
-// ✅ DM de aprovação/negação (qualquer usuário)
 async function safeNotifyDM(userId, text) {
   const user = await client.users.fetch(userId).catch(() => null);
   if (!user) return;
@@ -451,9 +426,6 @@ function markApprovedToday(userId, itemValue) {
   saveDB();
 }
 
-// =========================
-// ✅ "Rota completa" por streak de dias faltando
-// =========================
 function getApprovedCount(dateKey, userId, itemValue) {
   return db.daily?.[dateKey]?.[userId]?.[itemValue] || 0;
 }
@@ -462,11 +434,9 @@ function missStreakUntil(dateKey, userId, itemValue, maxLookbackDays = 120) {
   const base = DateTime.fromISO(dateKey, { zone: TZ });
   if (!base.isValid) return 0;
 
-  // se fez no dia, 0
   const todayCount = getApprovedCount(dateKey, userId, itemValue);
   if (todayCount >= 1) return 0;
 
-  // senão, conta quantos dias seguidos está faltando (inclui o dia)
   let streak = 0;
   for (let i = 0; i < maxLookbackDays; i++) {
     const dk = base.minus({ days: i }).toISODate();
@@ -493,15 +463,9 @@ function splitIntoPages(rows, maxLen = 3500) {
   return pages;
 }
 
-// ✅ tabela staff
 function buildStaffRow(userId, displayName, dateKey) {
-  const doneLine = FARME_OPTIONS
-    .map((o) => `${o.label}: ${getApprovedCount(dateKey, userId, o.value)}`)
-    .join(" | ");
-
-  const rotaCompletaLine = FARME_OPTIONS
-    .map((o) => `${o.label}: ${missStreakUntil(dateKey, userId, o.value)}`)
-    .join(" | ");
+  const doneLine = FARME_OPTIONS.map((o) => `${o.label}: ${getApprovedCount(dateKey, userId, o.value)}`).join(" | ");
+  const rotaCompletaLine = FARME_OPTIONS.map((o) => `${o.label}: ${missStreakUntil(dateKey, userId, o.value)}`).join(" | ");
 
   return (
     `👤 **${displayName}** (<@${userId}>)\n` +
@@ -544,7 +508,7 @@ function getHelpEmbedFor(member) {
 }
 
 // =========================
-// ✅ NOVO: LEADERBOARD FIXA (1 msg)
+// ✅ LEADERBOARD FIXA
 // =========================
 function buildLeaderboardEmbed(guild) {
   const entries = Object.entries(db.totals || {})
@@ -553,13 +517,14 @@ function buildLeaderboardEmbed(guild) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
-  const desc =
-    entries.length
-      ? entries.map((e, i) => {
+  const desc = entries.length
+    ? entries
+        .map((e, i) => {
           const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🔸";
           return `${medal} **${i + 1}.** <@${e.userId}> — **${e.total}**`;
-        }).join("\n")
-      : "Ainda não tem farmes aprovados.";
+        })
+        .join("\n")
+    : "Ainda não tem farmes aprovados.";
 
   return new EmbedBuilder()
     .setTitle("🏆 Leaderboard de Farmes (fixa)")
@@ -591,8 +556,7 @@ async function updateLeaderboardFixed(guild) {
 }
 
 // =========================
-// ✅ NOVO: PAINEL PRODUTIVIDADE (1 msg por membro)
-// - Mostra só itens que o membro tem > 0, do jeitinho que você pediu
+// ✅ PRODUTIVIDADE (1 msg por membro)
 // =========================
 function buildProductivityEmbedFor(guild, userId) {
   ensureUserTotals(userId);
@@ -602,9 +566,7 @@ function buildProductivityEmbedFor(guild, userId) {
     .map((o) => ({ label: o.label, value: o.value, n: totals.items[o.value] || 0 }))
     .filter((x) => x.n > 0);
 
-  const lines = items.length
-    ? items.map((x) => `• **${x.label}:** ${x.n}`).join("\n")
-    : "— (ainda não tem farmes aprovados)";
+  const lines = items.length ? items.map((x) => `• **${x.label}:** ${x.n}`).join("\n") : "— (ainda não tem farmes aprovados)";
 
   return new EmbedBuilder()
     .setTitle("📊 Painel de Produtividade")
@@ -643,7 +605,7 @@ async function updatePanelsAfterChange(guild, userId) {
   await updateProductivityPanelFor(guild, userId);
 }
 
-// ✅ job diário (DM whitelist + relatório simples)
+// ✅ job diário
 async function runDailyAuditAndReport() {
   const dk = DateTime.now().setZone(TZ).minus({ days: 1 }).toISODate();
   const whitelist = dmWhitelist();
@@ -660,23 +622,54 @@ async function runDailyAuditAndReport() {
       await safeDailyDM(userId, dmText);
     }
 
-    // ✅ seu canal 147902... recebe só “relatório diário simples”
     await sendReport(guild, `✅ Relatório diário gerado (${dk}).`);
   }
 }
+
+// =========================
+// READY
+// =========================
+client.once("ready", async () => {
+  console.log(`🤖 Online como ${client.user.tag}`);
+
+  cleanupDB();
+  setInterval(cleanupDB, CLEANUP_EVERY_MS);
+
+  cron.schedule(
+    "5 3 * * *",
+    async () => {
+      await runDailyAuditAndReport().catch((e) => console.error("Daily job error:", e));
+    },
+    { timezone: TZ }
+  );
+
+  cron.schedule(
+    "*/5 * * * *",
+    async () => {
+      for (const guild of client.guilds.cache.values()) {
+        await updateLeaderboardFixed(guild).catch(() => {});
+      }
+    },
+    { timezone: TZ }
+  );
+
+  for (const guild of client.guilds.cache.values()) {
+    await updateLeaderboardFixed(guild).catch(() => {});
+  }
+
+  console.log(`⏰ Daily job: 03:05 (${TZ}) | Auto refresh leaderboard: 5 em 5 min`);
+});
 
 // =========================
 // Interactions
 // =========================
 client.on("interactionCreate", async (interaction) => {
   try {
-    // /ajuda
     if (interaction.isChatInputCommand() && interaction.commandName === "ajuda") {
       const embed = getHelpEmbedFor(interaction.member);
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    // /testardiario
     if (interaction.isChatInputCommand() && interaction.commandName === "testardiario") {
       if (!isStaff(interaction.member)) return interaction.reply({ content: "❌ Apenas 00/Gerente.", ephemeral: true });
       await interaction.deferReply({ ephemeral: true });
@@ -688,7 +681,6 @@ client.on("interactionCreate", async (interaction) => {
       if (!dk) return interaction.editReply('❌ Data inválida. Use: **YYYY-MM-DD** (ex: 2026-03-05).');
 
       const guild = interaction.guild;
-
       await guild.members.fetch().catch(() => null);
 
       const targets = guild.members.cache
@@ -696,7 +688,7 @@ client.on("interactionCreate", async (interaction) => {
         .map((m) => m)
         .sort((a, b) => (a.displayName || a.user.username).localeCompare(b.displayName || b.user.username));
 
-      const rows = targets.map((m) => buildStaffRow(m.user.id, (m.displayName || m.user.username), dk));
+      const rows = targets.map((m) => buildStaffRow(m.user.id, m.displayName || m.user.username, dk));
 
       const header =
         `📌 **Tabela de metas** solicitada por <@${interaction.user.id}> — Data: **${dk}**\n` +
@@ -716,12 +708,8 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply(`✅ Postei a tabela no canal staff <#${STAFF_TABLE_CHANNEL_ID}>.`);
     }
 
-    // /farme
     if (interaction.isChatInputCommand() && interaction.commandName === "farme") {
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("farme_menu")
-        .setPlaceholder("Escolha uma opção…")
-        .addOptions(FARME_OPTIONS);
+      const menu = new StringSelectMenuBuilder().setCustomId("farme_menu").setPlaceholder("Escolha uma opção…").addOptions(FARME_OPTIONS);
 
       return interaction.reply({
         content: "Selecione a opção para criar/abrir seu canal privado:",
@@ -730,7 +718,6 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // /gerenciarcanal
     if (interaction.isChatInputCommand() && interaction.commandName === "gerenciarcanal") {
       if (!isStaff(interaction.member)) return interaction.reply({ content: "❌ Apenas 00/Gerente.", ephemeral: true });
 
@@ -748,16 +735,13 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // Menu -> cria canal
     if (interaction.isStringSelectMenu() && interaction.customId === "farme_menu") {
       const selected = interaction.values[0];
       const opt = FARME_OPTIONS.find((o) => o.value === selected);
 
       const channelName = `farme-${selected}-${slugUser(interaction.user)}`.slice(0, 90);
 
-      const existing = interaction.guild.channels.cache.find(
-        (c) => c.type === ChannelType.GuildText && c.name === channelName
-      );
+      const existing = interaction.guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === channelName);
 
       const targetChannel = existing
         ? existing
@@ -769,12 +753,7 @@ client.on("interactionCreate", async (interaction) => {
               { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
               {
                 id: interaction.user.id,
-                allow: [
-                  PermissionFlagsBits.ViewChannel,
-                  PermissionFlagsBits.SendMessages,
-                  PermissionFlagsBits.ReadMessageHistory,
-                  PermissionFlagsBits.AttachFiles,
-                ],
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles],
               },
               {
                 id: ROLE_00_ID,
@@ -813,10 +792,7 @@ client.on("interactionCreate", async (interaction) => {
         );
       }
 
-      const goBtn = new ButtonBuilder()
-        .setStyle(ButtonStyle.Link)
-        .setLabel("➡️ Ir para o canal")
-        .setURL(channelLink(interaction.guild.id, targetChannel.id));
+      const goBtn = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("➡️ Ir para o canal").setURL(channelLink(interaction.guild.id, targetChannel.id));
 
       return interaction.reply({
         content: existing ? `✅ Seu canal já existe.\nClique para abrir agora:` : `✅ Canal criado.\nClique para abrir agora:`,
@@ -825,14 +801,10 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // /enviarfarme
     if (interaction.isChatInputCommand() && interaction.commandName === "enviarfarme") {
       const opt = parseItemFromChannelName(interaction.channel?.name);
       if (!opt) {
-        return interaction.reply({
-          content: "❌ Use este comando dentro do seu canal de farme (farme-...-seunome).",
-          ephemeral: true,
-        });
+        return interaction.reply({ content: "❌ Use este comando dentro do seu canal de farme (farme-...-seunome).", ephemeral: true });
       }
 
       const remaining = getCooldownRemaining(interaction.user.id);
@@ -897,7 +869,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "✅ Enviado! Aguarde aprovação do 00/Gerente.", ephemeral: true });
     }
 
-    // /meusfarmes
     if (interaction.isChatInputCommand() && interaction.commandName === "meusfarmes") {
       ensureUserTotals(interaction.user.id);
       const totals = db.totals[interaction.user.id];
@@ -912,7 +883,6 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    // /ranking
     if (interaction.isChatInputCommand() && interaction.commandName === "ranking") {
       const entries = Object.entries(db.totals || {})
         .map(([userId, t]) => ({ userId, total: t.total || 0 }))
@@ -982,7 +952,6 @@ client.on("interactionCreate", async (interaction) => {
         embed
       );
 
-      // ✅ atualiza leaderboard fixa + painel do membro
       await updatePanelsAfterChange(interaction.guild, req.userId);
 
       return interaction.editReply({
@@ -1022,7 +991,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.showModal(modal);
     }
 
-    // MODAL: motivo
+    // MODAL: motivo negar
     if (interaction.isModalSubmit() && interaction.customId.startsWith("farme_modal_negar:")) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -1089,7 +1058,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // =========================
-    // PAINEL STAFF (fechar/encerrar/ajustar)
+    // PAINEL STAFF
     // =========================
     if (interaction.isButton() && interaction.customId.startsWith("farme_staff_")) {
       const [action, requestId] = interaction.customId.split(":");
@@ -1097,7 +1066,7 @@ client.on("interactionCreate", async (interaction) => {
       if (!req) return interaction.reply({ content: "❌ Pedido não encontrado no db.", ephemeral: true });
       if (!isStaff(interaction.member)) return interaction.reply({ content: "❌ Apenas staff.", ephemeral: true });
 
-      // AJUSTAR abre modal
+      // ✅ AJUSTAR abre modal
       if (action === "farme_staff_ajustar") {
         if (!is00(interaction.member)) return interaction.reply({ content: "❌ Apenas o **00** pode ajustar valores.", ephemeral: true });
         if (req.status === "pending") return interaction.reply({ content: "❌ Ajuste só depois de aprovar/negar.", ephemeral: true });
@@ -1128,7 +1097,7 @@ client.on("interactionCreate", async (interaction) => {
         modal.addComponents(
           new ActionRowBuilder().addComponents(opInput),
           new ActionRowBuilder().addComponents(valInput),
-          new ActionRowBuilder().addComponents(noteInput),
+          new ActionRowBuilder().addComponents(noteInput)
         );
 
         return interaction.showModal(modal);
@@ -1178,15 +1147,93 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply("⚠️ Ação desconhecida.");
     }
 
+    // ✅ MODAL AJUSTAR (00) — AQUI ESTAVA FALTANDO NO SEU CÓDIGO ORIGINAL
+    if (interaction.isModalSubmit() && interaction.customId.startsWith("farme_modal_ajustar:")) {
+      await interaction.deferReply({ ephemeral: true });
+
+      if (!is00(interaction.member)) return interaction.editReply("❌ Apenas o **00** pode ajustar.");
+
+      const requestId = interaction.customId.split(":")[1];
+      const req = db.requests[requestId];
+      if (!req) return interaction.editReply("❌ Pedido não encontrado no db.");
+
+      const op = (interaction.fields.getTextInputValue("op") || "").trim().toLowerCase();
+      const valStr = (interaction.fields.getTextInputValue("val") || "").trim();
+      const note = (interaction.fields.getTextInputValue("note") || "").trim();
+
+      const val = parseInt(valStr, 10);
+      if (!["+", "-", "set"].includes(op)) return interaction.editReply('❌ Operação inválida. Use: "+", "-", ou "set".');
+      if (!Number.isFinite(val)) return interaction.editReply("❌ Valor inválido. Ex: 40");
+
+      ensureUserTotals(req.userId);
+
+      // calcula delta
+      let delta = 0;
+      if (op === "+") delta = val;
+      if (op === "-") delta = -val;
+      if (op === "set") delta = val - (req.quantidade || 0);
+
+      // aplica no pedido e nos totais
+      req.quantidade = Math.max(0, (req.quantidade || 0) + delta);
+      req.adjustedAt = Date.now();
+      req.adjustedById = interaction.user.id;
+      req.adjustedByTag = interaction.user.tag;
+      req.adjustedDelta = (req.adjustedDelta || 0) + delta;
+      req.adjustedNote = `Op: ${op} ${val} | Delta: ${delta}${note ? ` | Nota: ${note}` : ""}`;
+
+      addTotals(req.userId, req.itemValue, delta);
+
+      // edita a mensagem original do pedido
+      const channel = await interaction.guild.channels.fetch(req.channelId).catch(() => null);
+      if (channel && channel.isTextBased()) {
+        const msg = await channel.messages.fetch(req.messageId).catch(() => null);
+        if (msg) {
+          const statusTxt =
+            req.status === "approved" ? "🟢 Aprovado" :
+            req.status === "denied" ? "🔴 Negado" :
+            req.status === "closed" ? "🔒 Fechado" : "🟡 Pendente";
+
+          const embed = makeRequestEmbed({
+            userTag: req.userTag,
+            userId: req.userId,
+            itemLabel: req.itemLabel,
+            quantidade: req.quantidade,
+            status: statusTxt,
+            approverTag: req.decidedByTag || null,
+            reason: req.denyReason || null,
+            adjustedInfo: req.adjustedNote || null,
+          }).setImage(req.printUrl);
+
+          await msg.edit({ embeds: [embed] }).catch(() => {});
+        }
+      }
+
+      await safeNotifyDM(
+        req.userId,
+        `🛠️ Seu farme foi **AJUSTADO** pelo 00.\nItem: **${req.itemLabel}**\nNovo valor: **${req.quantidade}**\nDetalhes: ${req.adjustedNote}`
+      );
+
+      await updatePanelsAfterChange(interaction.guild, req.userId);
+
+      return interaction.editReply(`✅ Ajustado com sucesso. Delta aplicado: **${delta}**. Novo total do pedido: **${req.quantidade}**`);
+    }
   } catch (err) {
     console.error(err);
     if (interaction.isRepliable()) {
-      await interaction.reply({ content: "❌ Deu erro. Olha o console do terminal.", ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: "❌ Deu erro. Olha o console do Render.", ephemeral: true }).catch(() => {});
     }
   }
 });
 
+// =========================
+// START (com erro aparecendo no log)
+// =========================
 (async () => {
-  await registerCommands();
-  await client.login(process.env.DISCORD_TOKEN);
+  try {
+    await registerCommands();
+    console.log("✅ Vou logar no Discord agora...");
+    await client.login(process.env.DISCORD_TOKEN);
+  } catch (err) {
+    console.error("❌ ERRO AO INICIAR BOT:", err);
+  }
 })();
