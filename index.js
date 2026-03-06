@@ -1247,12 +1247,19 @@ client.on("interactionCreate", async (interaction) => {
 // START (com erro aparecendo no log)
 // =========================
 (async () => {
-  console.log("🚀 Iniciando bot...");
+  try {
+    console.log("🚀 Iniciando bot...");
 
-  await registerCommands(); // se falhar, só loga o erro e continua
+    // ✅ NÃO BLOQUEIA o login por causa do register
+    registerCommands()
+      .then(() => console.log("✅ registerCommands terminou"))
+      .catch((e) => console.error("❌ registerCommands falhou:", e?.rawError || e));
 
-  console.log("🔑 Fazendo login no Discord...");
-  await client.login(process.env.DISCORD_TOKEN);
-
-  console.log("✅ Login chamado.");
+    console.log("🔑 Fazendo login no Discord...");
+    await client.login(process.env.DISCORD_TOKEN);
+    console.log("✅ Login enviado pro Discord.");
+  } catch (err) {
+    console.error("❌ ERRO AO INICIAR BOT:");
+    console.error(err);
+  }
 })();
