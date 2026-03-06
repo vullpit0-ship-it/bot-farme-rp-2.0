@@ -227,7 +227,6 @@ async function registerCommands() {
     throw err;
   }
 }
-}
 
 // =========================
 // Helpers
