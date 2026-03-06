@@ -34,13 +34,19 @@ http
   })
   .listen(PORT, () => console.log(`🌐 WebService OK na porta ${PORT}`));
 
-// ✅ Log pra você confirmar se o Render está lendo as ENV
+// =========================
+// ✅ LOGS IMPORTANTES (pra descobrir pq não fica online)
+// =========================
 console.log("ENV CHECK:", {
   hasToken: !!process.env.DISCORD_TOKEN,
+  tokenLen: process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN.length : 0,
   hasClientId: !!process.env.CLIENT_ID,
   hasGuildId: !!process.env.GUILD_ID,
-  port: PORT,
+  port: String(PORT),
 });
+
+process.on("unhandledRejection", (e) => console.error("UNHANDLED:", e));
+process.on("uncaughtException", (e) => console.error("UNCAUGHT:", e));
 
 // =========================
 // ✅ intents necessários
@@ -48,6 +54,25 @@ console.log("ENV CHECK:", {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
+
+// Logs de conexão gateway (muito útil)
+client.on("ready", () => {
+  console.log(`✅ READY! 🤖 Online como ${client.user.tag}`);
+});
+client.on("warn", (m) => console.warn("WARN:", m));
+client.on("error", (e) => console.error("CLIENT ERROR:", e));
+client.on("shardError", (e) => console.error("SHARD ERROR:", e));
+client.on("shardDisconnect", (event, shardId) => console.warn(`SHARD ${shardId} DISCONNECT:`, event?.reason));
+client.on("shardReconnecting", (shardId) => console.warn(`SHARD ${shardId} RECONNECTING...`));
+client.on("shardResume", (shardId) => console.log(`SHARD ${shardId} RESUMED.`));
+
+// Se não ficar READY em 60s, reinicia (Render sobe novamente)
+setTimeout(() => {
+  if (!client.isReady()) {
+    console.error("❌ Não ficou READY em 60s. Reiniciando processo (Render)...");
+    process.exit(1);
+  }
+}, 60_000);
 
 // =========================
 // CONFIGURE AQUI (IDs)
@@ -93,7 +118,14 @@ const USER_ID_GERENTE_ACAO = "";
 const USER_ID_NOVATO = "";
 
 function dmWhitelist() {
-  return [USER_ID_MEMBRO, USER_ID_GERENTE, USER_ID_00, USER_ID_01, USER_ID_GERENTE_ACAO, USER_ID_NOVATO].filter(Boolean);
+  return [
+    USER_ID_MEMBRO,
+    USER_ID_GERENTE,
+    USER_ID_00,
+    USER_ID_01,
+    USER_ID_GERENTE_ACAO,
+    USER_ID_NOVATO,
+  ].filter(Boolean);
 }
 function canSendDailyDMTo(userId) {
   return dmWhitelist().includes(userId);
@@ -175,13 +207,17 @@ const commands = [
     .addIntegerOption((opt) =>
       opt.setName("quantidade").setDescription("Quantidade farmada (ex: 60)").setRequired(true).setMinValue(1)
     )
-    .addAttachmentOption((opt) => opt.setName("print").setDescription("Envie o print/anexo como prova").setRequired(true)),
+    .addAttachmentOption((opt) =>
+      opt.setName("print").setDescription("Envie o print/anexo como prova").setRequired(true)
+    ),
 
   new SlashCommandBuilder().setName("meusfarmes").setDescription("Mostra sua tabela de farmes (por item e total)."),
 
   new SlashCommandBuilder().setName("ranking").setDescription("Mostra o ranking geral de farmes (top 10)."),
 
-  new SlashCommandBuilder().setName("gerenciarcanal").setDescription("(Staff) Abre painel para Fechar/Encerrar/Ajustar o canal atual."),
+  new SlashCommandBuilder()
+    .setName("gerenciarcanal")
+    .setDescription("(Staff) Abre painel para Fechar/Encerrar/Ajustar o canal atual."),
 
   new SlashCommandBuilder()
     .setName("testardiario")
@@ -197,7 +233,9 @@ const commands = [
           { name: "data (YYYY-MM-DD)", value: "data" }
         )
     )
-    .addStringOption((opt) => opt.setName("data").setDescription('Se "dia" = data, coloque aqui: YYYY-MM-DD').setRequired(false)),
+    .addStringOption((opt) =>
+      opt.setName("data").setDescription('Se "dia" = data, coloque aqui: YYYY-MM-DD').setRequired(false)
+    ),
 
   new SlashCommandBuilder().setName("ajuda").setDescription("Mostra os comandos disponíveis para o seu cargo."),
 ].map((c) => c.toJSON());
@@ -222,11 +260,8 @@ async function registerCommands() {
 
     console.log("✅ Slash commands registrados no servidor!");
   } catch (err) {
-    // ✅ Mostra o erro REAL do Discord
     console.error("❌ ERRO ao registrar commands:", err?.rawError || err);
-
-    // ✅ NÃO dá throw aqui
-    // Assim, mesmo se o registro falhar, o bot loga e fica Online
+    // NÃO trava o bot — continua pro login
   }
 }
 
@@ -584,7 +619,9 @@ function buildProductivityEmbedFor(guild, userId) {
     .map((o) => ({ label: o.label, value: o.value, n: totals.items[o.value] || 0 }))
     .filter((x) => x.n > 0);
 
-  const lines = items.length ? items.map((x) => `• **${x.label}:** ${x.n}`).join("\n") : "— (ainda não tem farmes aprovados)";
+  const lines = items.length
+    ? items.map((x) => `• **${x.label}:** ${x.n}`).join("\n")
+    : "— (ainda não tem farmes aprovados)";
 
   return new EmbedBuilder()
     .setTitle("📊 Painel de Produtividade")
@@ -645,11 +682,9 @@ async function runDailyAuditAndReport() {
 }
 
 // =========================
-// READY
+// READY (jobs)
 // =========================
 client.once("ready", async () => {
-  console.log(`🤖 Online como ${client.user.tag}`);
-
   cleanupDB();
   setInterval(cleanupDB, CLEANUP_EVERY_MS);
 
@@ -727,7 +762,10 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (interaction.isChatInputCommand() && interaction.commandName === "farme") {
-      const menu = new StringSelectMenuBuilder().setCustomId("farme_menu").setPlaceholder("Escolha uma opção…").addOptions(FARME_OPTIONS);
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("farme_menu")
+        .setPlaceholder("Escolha uma opção…")
+        .addOptions(FARME_OPTIONS);
 
       return interaction.reply({
         content: "Selecione a opção para criar/abrir seu canal privado:",
@@ -759,7 +797,9 @@ client.on("interactionCreate", async (interaction) => {
 
       const channelName = `farme-${selected}-${slugUser(interaction.user)}`.slice(0, 90);
 
-      const existing = interaction.guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === channelName);
+      const existing = interaction.guild.channels.cache.find(
+        (c) => c.type === ChannelType.GuildText && c.name === channelName
+      );
 
       const targetChannel = existing
         ? existing
@@ -771,7 +811,12 @@ client.on("interactionCreate", async (interaction) => {
               { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
               {
                 id: interaction.user.id,
-                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles],
+                allow: [
+                  PermissionFlagsBits.ViewChannel,
+                  PermissionFlagsBits.SendMessages,
+                  PermissionFlagsBits.ReadMessageHistory,
+                  PermissionFlagsBits.AttachFiles,
+                ],
               },
               {
                 id: ROLE_00_ID,
@@ -810,7 +855,10 @@ client.on("interactionCreate", async (interaction) => {
         );
       }
 
-      const goBtn = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("➡️ Ir para o canal").setURL(channelLink(interaction.guild.id, targetChannel.id));
+      const goBtn = new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel("➡️ Ir para o canal")
+        .setURL(channelLink(interaction.guild.id, targetChannel.id));
 
       return interaction.reply({
         content: existing ? `✅ Seu canal já existe.\nClique para abrir agora:` : `✅ Canal criado.\nClique para abrir agora:`,
@@ -819,10 +867,14 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
+    // ========= /enviarfarme =========
     if (interaction.isChatInputCommand() && interaction.commandName === "enviarfarme") {
       const opt = parseItemFromChannelName(interaction.channel?.name);
       if (!opt) {
-        return interaction.reply({ content: "❌ Use este comando dentro do seu canal de farme (farme-...-seunome).", ephemeral: true });
+        return interaction.reply({
+          content: "❌ Use este comando dentro do seu canal de farme (farme-...-seunome).",
+          ephemeral: true,
+        });
       }
 
       const remaining = getCooldownRemaining(interaction.user.id);
@@ -887,6 +939,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ content: "✅ Enviado! Aguarde aprovação do 00/Gerente.", ephemeral: true });
     }
 
+    // ========= /meusfarmes =========
     if (interaction.isChatInputCommand() && interaction.commandName === "meusfarmes") {
       ensureUserTotals(interaction.user.id);
       const totals = db.totals[interaction.user.id];
@@ -901,6 +954,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
+    // ========= /ranking =========
     if (interaction.isChatInputCommand() && interaction.commandName === "ranking") {
       const entries = Object.entries(db.totals || {})
         .map(([userId, t]) => ({ userId, total: t.total || 0 }))
@@ -1084,7 +1138,7 @@ client.on("interactionCreate", async (interaction) => {
       if (!req) return interaction.reply({ content: "❌ Pedido não encontrado no db.", ephemeral: true });
       if (!isStaff(interaction.member)) return interaction.reply({ content: "❌ Apenas staff.", ephemeral: true });
 
-      // ✅ AJUSTAR abre modal
+      // AJUSTAR abre modal
       if (action === "farme_staff_ajustar") {
         if (!is00(interaction.member)) return interaction.reply({ content: "❌ Apenas o **00** pode ajustar valores.", ephemeral: true });
         if (req.status === "pending") return interaction.reply({ content: "❌ Ajuste só depois de aprovar/negar.", ephemeral: true });
@@ -1165,7 +1219,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply("⚠️ Ação desconhecida.");
     }
 
-    // ✅ MODAL AJUSTAR (00) — AQUI ESTAVA FALTANDO NO SEU CÓDIGO ORIGINAL
+    // MODAL AJUSTAR (00)
     if (interaction.isModalSubmit() && interaction.customId.startsWith("farme_modal_ajustar:")) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -1185,13 +1239,11 @@ client.on("interactionCreate", async (interaction) => {
 
       ensureUserTotals(req.userId);
 
-      // calcula delta
       let delta = 0;
       if (op === "+") delta = val;
       if (op === "-") delta = -val;
       if (op === "set") delta = val - (req.quantidade || 0);
 
-      // aplica no pedido e nos totais
       req.quantidade = Math.max(0, (req.quantidade || 0) + delta);
       req.adjustedAt = Date.now();
       req.adjustedById = interaction.user.id;
@@ -1201,7 +1253,6 @@ client.on("interactionCreate", async (interaction) => {
 
       addTotals(req.userId, req.itemValue, delta);
 
-      // edita a mensagem original do pedido
       const channel = await interaction.guild.channels.fetch(req.channelId).catch(() => null);
       if (channel && channel.isTextBased()) {
         const msg = await channel.messages.fetch(req.messageId).catch(() => null);
@@ -1244,22 +1295,31 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 // =========================
-// START (com erro aparecendo no log)
+// START
 // =========================
 (async () => {
   try {
     console.log("🚀 Iniciando bot...");
 
-    // ✅ NÃO BLOQUEIA o login por causa do register
+    // registra commands sem bloquear
     registerCommands()
       .then(() => console.log("✅ registerCommands terminou"))
       .catch((e) => console.error("❌ registerCommands falhou:", e?.rawError || e));
 
+    if (!process.env.DISCORD_TOKEN) {
+      console.error("❌ DISCORD_TOKEN vazio! Configure no Render > Environment.");
+      process.exit(1);
+    }
+
     console.log("🔑 Fazendo login no Discord...");
-    await client.login(process.env.DISCORD_TOKEN);
-    console.log("✅ Login enviado pro Discord.");
+    client.login(process.env.DISCORD_TOKEN)
+      .then(() => console.log("✅ LOGIN promise resolvida (aguardando READY)..."))
+      .catch((e) => {
+        console.error("❌ LOGIN ERROR:", e?.rawError || e);
+        process.exit(1);
+      });
   } catch (err) {
-    console.error("❌ ERRO AO INICIAR BOT:");
-    console.error(err);
+    console.error("❌ ERRO AO INICIAR BOT:", err);
+    process.exit(1);
   }
 })();
