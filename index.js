@@ -222,9 +222,11 @@ async function registerCommands() {
 
     console.log("✅ Slash commands registrados no servidor!");
   } catch (err) {
-    console.error("❌ ERRO AO REGISTRAR COMMANDS:");
-    console.error(err);
-    throw err;
+    // ✅ Mostra o erro REAL do Discord
+    console.error("❌ ERRO ao registrar commands:", err?.rawError || err);
+
+    // ✅ NÃO dá throw aqui
+    // Assim, mesmo se o registro falhar, o bot loga e fica Online
   }
 }
 
@@ -1245,18 +1247,12 @@ client.on("interactionCreate", async (interaction) => {
 // START (com erro aparecendo no log)
 // =========================
 (async () => {
-  try {
-    console.log("🚀 Iniciando bot...");
+  console.log("🚀 Iniciando bot...");
 
-    console.log("1️⃣ Antes de registrar commands...");
-    await registerCommands();
-    console.log("2️⃣ Commands registrados com sucesso.");
+  await registerCommands(); // se falhar, só loga o erro e continua
 
-    console.log("3️⃣ Antes do login no Discord...");
-    await client.login(process.env.DISCORD_TOKEN);
-    console.log("4️⃣ Login enviado pro Discord.");
-  } catch (err) {
-    console.error("❌ ERRO AO INICIAR BOT:");
-    console.error(err);
-  }
+  console.log("🔑 Fazendo login no Discord...");
+  await client.login(process.env.DISCORD_TOKEN);
+
+  console.log("✅ Login chamado.");
 })();
