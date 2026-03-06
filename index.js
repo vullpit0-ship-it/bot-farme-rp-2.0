@@ -1,10 +1,8 @@
-==> Checking out commit 5892ca2802c64ee04d6d0d51474e8d61e991ec0a in branch main
 Menu
 ==> Downloaded 80MB in 3s. Extraction took 2s.
 ==> Requesting Node.js version 20.x
 ==> Using Node.js version 20.20.1 via /opt/render/project/src/package.json
 ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
-==> Running build command 'npm install'...
 up to date, audited 29 packages in 669ms
 8 packages are looking for funding
   run `npm fund` for details
