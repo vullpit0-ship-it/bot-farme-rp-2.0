@@ -203,13 +203,30 @@ const commands = [
 ].map((c) => c.toJSON());
 
 async function registerCommands() {
-  if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
-    console.log("⚠️ ENV faltando! Configure no Render: DISCORD_TOKEN, CLIENT_ID, GUILD_ID");
-    return;
+  try {
+    if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
+      console.log("⚠️ ENV faltando! Configure no Render: DISCORD_TOKEN, CLIENT_ID, GUILD_ID");
+      return;
+    }
+
+    console.log("🛠️ Registrando slash commands...");
+    console.log("CLIENT_ID:", process.env.CLIENT_ID);
+    console.log("GUILD_ID:", process.env.GUILD_ID);
+
+    const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+
+    await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      { body: commands }
+    );
+
+    console.log("✅ Slash commands registrados no servidor!");
+  } catch (err) {
+    console.error("❌ ERRO AO REGISTRAR COMMANDS:");
+    console.error(err);
+    throw err;
   }
-  const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
-  await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
-  console.log("✅ Slash commands registrados no servidor!");
+}
 }
 
 // =========================
@@ -1230,10 +1247,17 @@ client.on("interactionCreate", async (interaction) => {
 // =========================
 (async () => {
   try {
+    console.log("🚀 Iniciando bot...");
+
+    console.log("1️⃣ Antes de registrar commands...");
     await registerCommands();
-    console.log("✅ Vou logar no Discord agora...");
+    console.log("2️⃣ Commands registrados com sucesso.");
+
+    console.log("3️⃣ Antes do login no Discord...");
     await client.login(process.env.DISCORD_TOKEN);
+    console.log("4️⃣ Login enviado pro Discord.");
   } catch (err) {
-    console.error("❌ ERRO AO INICIAR BOT:", err);
+    console.error("❌ ERRO AO INICIAR BOT:");
+    console.error(err);
   }
 })();
