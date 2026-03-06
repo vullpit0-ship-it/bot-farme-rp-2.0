@@ -125,7 +125,15 @@ process.on("SIGINT", () => {
 // CLIENT DISCORD
 // ======================================================
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [GatewayIntentBits.Guilds],
+});
+
+client.on("ready", () => {
+  console.log("✅ EVENT ready disparado.");
+});
+
+client.once("clientReady", async () => {
+  console.log(`✅ BOT REALMENTE ONLINE: ${client.user.tag}`);
 });
 
 // Logs de gateway / discord.js
